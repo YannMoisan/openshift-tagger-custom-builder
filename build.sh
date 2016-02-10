@@ -20,6 +20,6 @@ if [ -z "$TOKEN" ]; then
   TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
 fi
 
-./oc login --token=$TOKEN --server=$OPENSHIFT_INSTANCE
-COMMIT_ID=$(./oc get istag $BUILD_IMAGE:latest -o json -n $BUILD_NAMESPACE | jq -r ".image.dockerImageMetadata.Config.Labels.\"io.openshift.build.commit.id\"")
-./oc tag $BUILD_IMAGE:latest $BUILD_IMAGE:$COMMIT_ID -n $BUILD_NAMESPACE
+oc login --token=$TOKEN --server=$OPENSHIFT_INSTANCE
+COMMIT_ID=$(oc get istag $BUILD_IMAGE:latest -o json -n $BUILD_NAMESPACE | jq -r ".image.dockerImageMetadata.Config.Labels.\"io.openshift.build.commit.id\"")
+oc tag $BUILD_IMAGE:latest $BUILD_IMAGE:$COMMIT_ID -n $BUILD_NAMESPACE

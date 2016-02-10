@@ -1,4 +1,4 @@
-FROM openshift/origin-base
+FROM openshift/origin
 
 MAINTAINER Yann Moisan <yamo93@gmail.com>
 
@@ -10,13 +10,10 @@ RUN echo "Installing Build Tools" && \
     yum install -y --enablerepo=centosplus gettext automake make docker jq && \
     yum clean all -y
 
-RUN wget https://github.com/openshift/origin/releases/download/v1.1.1/openshift-origin-client-tools-v1.1.1-e1d9873-linux-64bit.tar.gz && \
-    tar xvzf openshift-origin-client-tools-v1.1.1-e1d9873-linux-64bit.tar.gz
-
-WORKDIR /openshift-origin-client-tools-v1.1.1-e1d9873-linux-64bit
-
 ENV HOME /root
 
 ADD ./build.sh /tmp/build.sh
+
+ENTRYPOINT [ "/bin/sh", "-c" ]
 
 CMD [ "/tmp/build.sh" ]
