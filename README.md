@@ -58,3 +58,10 @@ To use it, you just have to add a BuildConfig that will be triggered after your 
           kind: ImageStreamTag
           name: ${APPLICATION_NAME}:latest
 ```
+
+You need to also assign a proper role for `builder` serviceaccount to allow
+reading and modifying imagestreams. You can use `edit` role:
+
+```
+oc adm policy add-role-to-user edit -z builder
+```
