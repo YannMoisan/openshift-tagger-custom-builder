@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  labels:
+    build: flaskdemo
+  name: flaskdemo
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: flaskdemo:latest
+  runPolicy: Serial
+  source:
+    git:
+      ref: master
+      uri: ssh://git@github.com/cloudowski/docker-flaskdemo.git
+    #sourceSecret:
+      #name: demosecret
+    type: Git
+  strategy:
+    dockerStrategy: {}
+    type: Docker
+  triggers:
+  - type: ConfigChange
+
+---
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: flaskdemo-tagger
+spec:
+  strategy:
+    type: Custom
+    customStrategy:
+      #secrets:
+        #- secretSource:
+            #name: "dockerhub1"
+        # mountPath: "/root/pushsecret"
+      exposeDockerSocket: true
+      from:
+        kind: ImageStreamTag
+        name: openshift-tagger-custom-builder:latest
+      env:
+      - name: DEBUG
+        value: 'n'
+      - name: BUILD_NAMESPACE
+        value: cicd
+      # - name: BUILD_IMAGE
+      #   value: flaskdemo
+      - name: SKIP_TLS_VERIFY
+        value: 'y'
+      - name: PUSH_TO_DOCKER
+        value: 'n'
+      - name: CREATE_LONG_TAG
+        value: 'n'
+  triggers:
+  - type: ImageChange
+    imageChange:
+      from:
+        kind: ImageStreamTag
+        name: flaskdemo:latest
