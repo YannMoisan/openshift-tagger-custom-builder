@@ -10,10 +10,10 @@ if [ -z "$BUILD_IMAGE" ]; then
   exit 2
 fi
 
-if [ -z "$SCMSECRET" ]; then
-  echo "Please define SCMSECRET for this application"
-  exit 3
-fi
+# if [ -z "$SCMSECRET" ]; then
+#   echo "Please define SCMSECRET for this application"
+#   exit 3
+# fi
 
 if [ -z "$OC_SECRET" ]; then
   echo "Please define OC_SECRET for this application"
