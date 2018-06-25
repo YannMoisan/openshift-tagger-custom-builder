@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# This script :
+# - retrieves the commit id from the last image built
+# - tag this image with the commit id
+
+set -e # fail fast
+set -o pipefail
+IFS=$'\n\t'
+
+echo $OPENSHIFT_USER
+echo $OPENSHIFT_SERVER
+echo $BUILD_NAMESPACE
+echo $BUILD_IMAGE
+
+if [ -z "$OPENSHIFT_USER" ]; then
+    (>&2 echo "ERROR could not login OPENSHIFT_USER not set")
+    exit 1
+fi
+if [ -z "$OPENSHIFT_PASSWORD" ]; then
+    (>&2 echo "echo ERROR could not login OPENSHIFT_PASSWORD not set")
+    exit 2
+fi
+
+oc login ${OPENSHIFT_SERVER} -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWORD} > /dev/null
+
+if [[ "$?" != "0" ]]; then
+    (>&2 echo "ERROR Could not oc login. Exiting")
+    exit 1
+fi
+
+set -x # debug
+
+# what is the OPENSHIFT_BUILD_REFERENCE in the Config.Env of the imate stream tag `:latest`?
+OPENSHIFT_BUILD_REFERENCE=$(oc get istag $BUILD_IMAGE:latest -o json -n $BUILD_NAMESPACE  | jq -r ".image.dockerImageMetadata.Config.Env" | jq '.[] | select(test("OPENSHIFT_BUILD_REFERENCE"))')
+
+# formatted as '"OPENSHIFT_BUILD_REFERENCE=v0.0.1"' so we need to extract the raw tag name
+OPENSHIFT_BUILD_REFERENCE=$(echo $OPENSHIFT_BUILD_REFERENCE | awk -F'=' '{print substr($2, 1, length($2)-1)}')
+
+# apply the tag to the built image
+oc tag $BUILD_IMAGE:latest $BUILD_IMAGE:$OPENSHIFT_BUILD_REFERENCE -n $BUILD_NAMESPACE
