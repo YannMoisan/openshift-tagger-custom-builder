@@ -50,10 +50,7 @@
             "source": {
                 "contextDir": "tag-oc-build",
                 "git": {
-                    "uri": "git@github.com:UniqKey/infrastructure.git"
-                },
-                "sourceSecret": {
-                    "name": "scmsecret4"
+                    "uri": "${SOURCE_REPOSITORY_URL}"
                 },
                 "type": "Git"
             },
@@ -164,7 +161,7 @@
       "displayName": "Git Repository URL",
       "description": "The URL of the repository with your application source code.",
       "required": true,
-      "value": "git@github.com:UniqKey/infrastructure.git"
+      "value": "https://github.com/simbo1905/openshift-tagger-custom-builder.git"
     },
     {
       "name": "SOURCE_REPOSITORY_REF",
@@ -182,7 +179,7 @@
       "name": "SCMSECRET",
       "displayName": "SCM Secret",
       "description": "The SSH Key Secret to pull the source code.",
-      "required": true
+      "required": false
     },
     {
       "name": "OC_SECRET",
