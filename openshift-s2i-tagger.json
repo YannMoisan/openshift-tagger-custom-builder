@@ -1,0 +1,191 @@
+{
+  "kind": "Template",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "tag-oc-build",
+    "annotations": {
+      "openshift.io/display-name": "Tag OC Build",
+      "description": "Tags a build with its git ref"    
+    }
+  },
+  "labels": {
+      "template":"tag-oc-build",
+      "app": "tag-oc-build"
+  },
+  "objects": [
+    {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "annotations": {
+          "description": "dev null for the tagging s2i"
+        }
+      }
+    },
+    {
+        "apiVersion": "build.openshift.io/v1",
+        "kind": "BuildConfig",
+        "metadata": {
+            "labels": {
+                "app": "${NAME}",
+                "template": "tag-oc-build"
+            },
+            "name": "${NAME}"
+        },
+        "spec": {
+            "output": {
+                "to": {
+                    "kind": "ImageStreamTag",
+                    "name": "${NAME}:latest"
+                }
+            },
+            "postCommit": {},
+            "resources": {
+                "limits": {
+                    "memory": "256Mi"
+                }
+            },
+            "runPolicy": "Serial",
+            "source": {
+                "contextDir": "tag-oc-build",
+                "git": {
+                    "uri": "${SOURCE_REPOSITORY_URL}"
+                },
+                "type": "Git"
+            },
+            "strategy": {
+                "sourceStrategy": {
+                    "envFrom": [
+                    {
+                        "secretRef": {
+                            "name": "${OC_SECRET}"
+                        }
+                    }
+                    ],
+                    "env": [
+                        {
+                            "name": "BUILD_NAMESPACE",
+                            "value": "${BUILD_NAMESPACE}"
+                        },
+                        {
+                            "name": "BUILD_IMAGE",
+                            "value": "${BUILD_IMAGE}"
+                        },
+                        {
+                            "name": "OPENSHIFT_SERVER",
+                            "valueFrom": {
+                                "secretKeyRef": {
+                                    "key": "OPENSHIFT_SERVER",
+                                    "name": "openshift-secrets"
+                                }
+                            }
+                        },
+                        {
+                            "name": "OPENSHIFT_USER",
+                            "valueFrom": {
+                                "secretKeyRef": {
+                                    "key": "OPENSHIFT_USER",
+                                    "name": "openshift-secrets"
+                                }
+                            }
+                        },
+                        {
+                            "name": "OPENSHIFT_PASSWORD",
+                            "valueFrom": {
+                                "secretKeyRef": {
+                                    "key": "OPENSHIFT_PASSWORD",
+                                    "name": "openshift-secrets"
+                                }
+                            }
+                        }
+                    ],
+                    "from": {
+                        "kind": "ImageStreamTag",
+                        "name": "gitops-openshift:latest"
+                    }
+                },
+                "type": "Source"
+            },
+            "triggers": [
+                {
+                    "type": "ConfigChange"
+                },
+                {
+                    "imageChange": {
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "name": "${BUILD_IMAGE}:latest"
+                        }
+                    },
+                    "type": "ImageChange"
+                },
+                {
+                    "type": "ImageChange"
+                }
+            ]
+        },
+        "status": {
+            "lastVersion": 6
+        }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "NAME",
+      "displayName": "Name",
+      "description": "The name to assign to this build object e.g. openshiftbot-tagger.",
+      "required": true
+    },
+    {
+      "name": "BUILD_IMAGE",
+      "displayName": "Build Image Stream",
+      "description": "The name of the build image stream to tag.",
+      "required": true
+    },
+    {
+      "name": "BUILD_NAMESPACE",
+      "displayName": "Build Namespace",
+      "description": "The OpenShift Namespace where the build ImageStream resides.",
+      "required": true
+    },
+    {
+      "name": "MEMORY_LIMIT",
+      "displayName": "Memory Limit",
+      "description": "Maximum amount of memory the container can use.",
+      "required": true,
+      "value": "512Mi"
+    },
+    {
+      "name": "SOURCE_REPOSITORY_URL",
+      "displayName": "Git Repository URL",
+      "description": "The URL of the repository with your application source code.",
+      "required": true,
+      "value": "https://github.com/simbo1905/openshift-tagger-custom-builder.git"
+    },
+    {
+      "name": "SOURCE_REPOSITORY_REF",
+      "displayName": "Git Reference",
+      "description": "Set this to a branch name, tag or other ref of your repository if you are not using the default branch.",
+      "value": "master"
+    },
+    {
+      "name": "CONTEXT_DIR",
+      "displayName": "Context Directory",
+      "description": "Set this to the relative path to your project if it is not in the root of your repository.",
+      "value": "tag-oc-build"
+    },
+    {
+      "name": "SCMSECRET",
+      "displayName": "SCM Secret",
+      "description": "The SSH Key Secret to pull the source code.",
+      "required": false
+    },
+    {
+      "name": "OC_SECRET",
+      "displayName": "OpenShift Secret",
+      "description": "The openshift credentials stored in a secret.",
+      "required": true
+    }
+  ]
+}

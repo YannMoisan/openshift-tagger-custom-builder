@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# do nothign as the output image isn't run this s2i is just to tag 
+# an image stream in its assemble. 

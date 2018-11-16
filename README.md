@@ -2,16 +2,21 @@
 
 Support multiple tags for a build output
 
-This can be hacked together today by:
+This can be hacked together today with a custom build strategy:
 
-1) create a custom builder image that pulls the built image and re-tags it with the commit found in the image label and pushes it
+1) create a custom builder image that pulls the built image and re-tags it with the commit found in the image label and pushes it.
 2) define a custom build config with an image change trigger such that it gets run whenever the "real" build pushes a new image.
+
+Note that custom builds are currently not enabled by default. A work around is to create an s2i build that does the work in the `assemble` script: 
+
+1) import the s2i image that has the script to do the tagging work.
+2) define an s2i build that will watch the image stream to tag then apply the tag.
 
 cf https://trello.com/c/nOX8FTRq/686-5-support-multiple-tags-for-a-build-output
 
 ## How it works
 
-## Run it locally
+## Run the Custom build strategy locally
 
 ```
 docker run -it -e TOKEN=$(oc whoami -t) \
@@ -21,7 +26,7 @@ docker run -it -e TOKEN=$(oc whoami -t) \
                yamo/openshift-tagger-custom-builder
 ```
 
-## Use it on openshift
+## Use the Custom build strategy on openshift
 
 To use it, you just have to add a BuildConfig that will be triggered after your build
 
@@ -58,3 +63,16 @@ To use it, you just have to add a BuildConfig that will be triggered after your 
           kind: ImageStreamTag
           name: ${APPLICATION_NAME}:latest
 ```
+
+## Build s2i image locally
+
+```# build the s2i image
+docker build .  -t gitops-openshift -f Dockerfile.s2i
+```
+
+## Use the s2i image on Openshift
+
+```#create the openshift secret (note openshift-secrets.env is in .gitignore)
+NAME=openshift-secrets ./create-env-secret.sh openshift-secrets.env
+#load the template that does the tagging build
+OC_SECRET=openshift-secrets BUILD_IMAGE=openshiftbot NAME=openshiftbot-tagger SCMSECRET=scmsecret4 ./create-s2i-tagger.sh

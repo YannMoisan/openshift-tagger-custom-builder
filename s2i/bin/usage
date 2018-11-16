@@ -1,0 +1,14 @@
+#!/bin/sh
+
+DISTRO=`cat /etc/*-release | grep ^ID= | grep -Po '".*?"' | tr -d '"'`
+
+cat <<EOF
+This s2i image is design to tag an image stream that it is watching. 
+It was inspired by https://github.com/YannMoisan/openshift-tagger-custom-builder 
+which uses a `type: Custom` stategy which isn't enabled by default
+due to security concerns and which isn't enabled on openshift online pro.
+This s2i just does the work of that custom strategy and writes unchanged
+layers to the output s2i image which is ignored. It also ignores the git 
+repo that is being built with the s2i unless you choose to use a git repo
+that overrides the `assemble` script.
+EOF

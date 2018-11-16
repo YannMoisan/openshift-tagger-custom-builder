@@ -1,0 +1,39 @@
+# This image provides tools for gitops on openshift
+#  - git
+#  - hub
+#  - oc
+#  - jq
+#  - git-secret
+#  - cowsay
+
+FROM openshift/base-centos7
+
+MAINTAINER Simon Massey <simbo1905@60hertz.com>
+
+# git, jq, cowsay
+RUN yum install deltarpm -y && yum update -y && yum install epel-release -y && yum install git jq cowsay -y && yum clean all -y
+
+# oc
+RUN cd /tmp && \
+    wget -q -O - https://github.com/openshift/origin/releases/download/v3.9.0/openshift-origin-client-tools-v3.9.0-191fece-linux-64bit.tar.gz | \
+    tar zxf - && \
+    mv $(find . -name oc) /usr/local/bin
+
+# hub
+RUN cd /tmp && wget -q -O - https://github.com/github/hub/releases/download/v2.4.0/hub-linux-arm64-2.4.0.tgz | \
+    tar zxf - && \
+    mv $(find . -name hub) /usr/local/bin
+
+# git-secret
+RUN cd /tmp && wget -q https://bintray.com/sobolevn/rpm/download_file?file_path=git-secret-0.2.4-1.noarch.rpm -O /tmp/git-secret.rpm && \
+    rpm -i /tmp/git-secret.rpm 
+
+RUN yum install cowsay -y
+
+# Copy the S2I scripts from the specific language image to $STI_SCRIPTS_PATH
+COPY ./s2i/bin/ $STI_SCRIPTS_PATH
+
+USER 1001
+
+# Set the default CMD to print the usage of the language image
+CMD $STI_SCRIPTS_PATH/usage
